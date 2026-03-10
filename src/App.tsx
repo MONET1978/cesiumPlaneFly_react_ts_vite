@@ -1,12 +1,26 @@
+import { useState } from 'react'
 import CesiumViewer from './components/CesiumViewer'
-import sampleFlightRoute from './components/RouteVisualizerApp'
-import './App.css' 
+import WaypointPanel from './components/WaypointPanel'
+import type { FlightRouteVisualizer } from './utils/flightRouteVisualizer'
+import './App.css'
+
 /**
  * 主应用组件
- * 渲染 Cesium 3D 地球视图
+ * 左侧航路管理面板 + 右侧 Cesium 3D 地球视图
  */
 function App() {
-  return <CesiumViewer flightRoute={sampleFlightRoute} showRoute={true} />
+  const [visualizer, setVisualizer] = useState<FlightRouteVisualizer | null>(null)
+
+  return (
+    <div className="app-container">
+      <div className="left-panels">
+        <WaypointPanel visualizer={visualizer} />
+      </div>
+      <div className="cesium-wrapper">
+        <CesiumViewer onVisualizerReady={setVisualizer} />
+      </div>
+    </div>
+  )
 }
 
 export default App

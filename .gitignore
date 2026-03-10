@@ -27,3 +27,12 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+
+# Windows reserved filenames
+nul
+con
+prn
+aux
+
+# Windows npm cache temp (should be ignored)
+%TEMP%/npm_cache_temp/

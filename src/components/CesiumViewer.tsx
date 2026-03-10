@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import {
     Cartesian3,
     Ion,
@@ -8,78 +8,90 @@ import {
 } from 'cesium'
 import 'cesium/Build/Cesium/Widgets/widgets.css'
 import { FlightRouteVisualizer } from '../utils/flightRouteVisualizer'
-import type { FlightRoute } from '../types/waypoint'
+
+import { useFlightRouteStore } from '../store/useFlightRouteStore'
+import { useCesiumSync } from '../hooks/useCesiumSync'
+import { useCesiumInteraction } from '../hooks/useCesiumInteraction'
+
 
 /**
  * Cesium Viewer 组件属性接口
  */
 interface CesiumViewerProps {
     containerId?: string
-    flightRoute?: FlightRoute
-    showRoute?: boolean
+    onVisualizerReady?: (visualizer: FlightRouteVisualizer) => void
 }
 
 /**
  * Cesium Viewer 组件
- * 用于初始化和显示 Cesium 3D 地球视图
- * 
- * @param props - 组件属性
- * @param props.containerId - Cesium 容器 DOM 元素的 ID，默认为 'cesiumContainer'
- * @param props.flightRoute - 航路数据，可选
- * @param props.showRoute - 是否显示航路，默认为 true
+ * 初始化 Cesium 3D 地球视图，通过 hooks 驱动渲染和交互
  */
-const CesiumViewer: React.FC<CesiumViewerProps> = ({ 
+const CesiumViewer: React.FC<CesiumViewerProps> = ({
     containerId = 'cesiumContainer',
-    flightRoute,
-    showRoute = true 
+    onVisualizerReady
 }) => {
-    const viewerRef = useRef<Viewer | null>(null)
-    const visualizerRef = useRef<FlightRouteVisualizer | null>(null)
+    const [viewer, setViewer] = useState<Viewer | null>(null)
+    const [visualizer, setVisualizer] = useState<FlightRouteVisualizer | null>(null)
+    const initRef = useRef(false)
+
+    // 使用 useCallback 包装回调，避免每次渲染创建新函数
+    const handleVisualizerReady = useRef((vis: FlightRouteVisualizer) => {
+        onVisualizerReady?.(vis)
+    })
+
+    // 渲染层：同步 store → Cesium
+    useCesiumSync(viewer, visualizer)
+
+    // 交互层：处理地图上的用户交互
+    useCesiumInteraction(viewer, visualizer)
 
     useEffect(() => {
-        /**
-         * 初始化 Cesium Viewer
-         */
+        // 防止 StrictMode 下重复初始化
+        if (initRef.current) return
+        initRef.current = true
+
         const initCesium = async (): Promise<void> => {
-            // 设置 Cesium Ion 访问令牌（从环境变量读取）
             const cesiumToken = import.meta.env.VITE_CESIUM_ION_TOKEN
             if (!cesiumToken) {
                 console.error('请在 .env 文件中配置 VITE_CESIUM_ION_TOKEN')
                 return
             }
             Ion.defaultAccessToken = cesiumToken
-            
-            // 初始化 Cesium Viewer
-            viewerRef.current = new Viewer(containerId, {
+
+            const v = new Viewer(containerId, {
                 terrain: Terrain.fromWorldTerrain(),
+                // 禁用 requestRenderMode 以避免渲染器宽度错误
+                requestRenderMode: false,
+                // 启用性能监控
+                sceneMode: 3,
+                // 设置最大渲染时间避免无限渲染
+                maximumRenderTimeChange: Infinity
             })
 
-            // 初始化航路可视化工具
-            visualizerRef.current = new FlightRouteVisualizer(viewerRef.current)
+            const vis = new FlightRouteVisualizer(v)
 
-            // 如果提供了航路数据且需要显示
-            if (flightRoute && showRoute) {
-                visualizerRef.current.addFlightRoute(flightRoute)
-                
-                // 飞行到第一个航路点
-                if (flightRoute.waypoints.length > 0) {
-                    const firstWaypoint = flightRoute.waypoints[0]
-                    viewerRef.current.camera.flyTo({
-                        destination: Cartesian3.fromDegrees(
-                            firstWaypoint.longitude,
-                            firstWaypoint.latitude,
-                            firstWaypoint.height + 1000
-                        ),
-                        orientation: {
-                            heading: CesiumMath.toRadians(0.0),
-                            pitch: CesiumMath.toRadians(-45.0),
-                        },
-                        duration: 3
-                    })
-                }
+            setViewer(v)
+            setVisualizer(vis)
+            handleVisualizerReady.current(vis)
+
+            // 飞行到第一个航路点（如果有的话）
+            const waypoints = useFlightRouteStore.getState().waypoints
+            if (waypoints.length > 0) {
+                const first = waypoints[0]
+                v.camera.flyTo({
+                    destination: Cartesian3.fromDegrees(
+                        first.longitude,
+                        first.latitude,
+                        first.height + 1000
+                    ),
+                    orientation: {
+                        heading: CesiumMath.toRadians(0.0),
+                        pitch: CesiumMath.toRadians(-45.0),
+                    },
+                    duration: 3
+                })
             } else {
-                // 默认飞行到旧金山
-                viewerRef.current.camera.flyTo({
+                v.camera.flyTo({
                     destination: Cartesian3.fromDegrees(-122.4175, 37.655, 400),
                     orientation: {
                         heading: CesiumMath.toRadians(0.0),
@@ -91,14 +103,19 @@ const CesiumViewer: React.FC<CesiumViewerProps> = ({
 
         initCesium()
 
-        // 清理函数：组件卸载时销毁 Viewer
         return () => {
-            if (viewerRef.current) {
-                viewerRef.current.destroy()
-                viewerRef.current = null
+            // cleanup will be handled by React when component truly unmounts
+        }
+    }, [containerId])
+
+    // 组件卸载时销毁 Viewer
+    useEffect(() => {
+        return () => {
+            if (viewer) {
+                viewer.destroy()
             }
         }
-    }, [containerId, flightRoute, showRoute])
+    }, [viewer])
 
     return (
         <div

@@ -3,6 +3,8 @@
  * 定义单个航路点的地理坐标和元数据
  */
 export interface Waypoint {
+  /** 航路点唯一标识符 */
+  id: string
   /** 经度（-180 到 180） */
   longitude: number
   /** 纬度（-90 到 90） */
@@ -16,14 +18,19 @@ export interface Waypoint {
 }
 
 /**
- * 航路配置接口
+ * 航路点输入类型（不含 id，由系统自动生成）
+ */
+export type WaypointInput = Omit<Waypoint, 'id'>
+
+/**
+ * 航路配置接口（序列化/传输格式，waypoints 不含 id）
  * 定义整条航路的属性
  */
 export interface FlightRoute {
   /** 航路名称 */
   name: string
-  /** 航路点列表 */
-  waypoints: Waypoint[]
+  /** 航路点列表（不含 id，加载时由系统自动生成） */
+  waypoints: WaypointInput[]
   /** 航路颜色（CSS 颜色字符串） */
   color?: string
   /** 航路线宽 */
@@ -35,7 +42,7 @@ export interface FlightRoute {
  * @param waypoint - 待验证的航路点
  * @returns 验证结果，包含是否有效和错误信息
  */
-export function validateWaypoint(waypoint: Waypoint): { 
+export function validateWaypoint(waypoint: WaypointInput): { 
   valid: boolean
   errors: string[] 
 } {
