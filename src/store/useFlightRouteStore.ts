@@ -66,8 +66,8 @@ export const useFlightRouteStore = create<FlightRouteStore>((set, get) => ({
     isSelectingMode: false,
 
     addWaypoint: (wp, index) => set((state) => {
-       const newWaypoint = toWaypoint(wp)
-       const waypoints = [...state.waypoints]
+        const newWaypoint = toWaypoint(wp)
+        const waypoints = [...state.waypoints]
         if (index !== undefined && index >= 0 && index <= waypoints.length) {
             waypoints.splice(index, 0, newWaypoint)
         } else {
@@ -114,8 +114,8 @@ export const useFlightRouteStore = create<FlightRouteStore>((set, get) => ({
 
     importFromJSON: (json) => {
         try {
-           const parsed = JSON.parse(json) as FlightRoute
-           const result = validateFlightRoute(parsed)
+            const parsed = JSON.parse(json) as FlightRoute
+            const result = validateFlightRoute(parsed)
             if (!result.valid) {
                 return { success: false, errors: result.errors }
             }
@@ -127,15 +127,15 @@ export const useFlightRouteStore = create<FlightRouteStore>((set, get) => ({
     },
 
     exportToJSON: () => {
-       const state = get()
-       const route: FlightRoute = {
+        const state = get()
+        const route: FlightRoute = {
             name: state.routeName,
             waypoints: state.waypoints.map((w) => {
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-               const { id: _id, ...rest } = w
+                const { id: _id, ...rest } = w
                 return rest
             }),
-           color: state.routeColor,
+            color: state.routeColor,
             lineWidth: state.routeLineWidth,
         }
         return JSON.stringify(route, null, 2)

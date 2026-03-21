@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import {
-   Cartesian2,
-   Cartographic,
+    Cartesian2,
+    Cartographic,
     Color,
     Math as CesiumMath,
     ScreenSpaceEventHandler,
@@ -17,10 +17,10 @@ import type { FlightRouteVisualizer } from '../utils/flightRouteVisualizer'
  * 处理用户在地图上的点击、右键、拖拽等交互操作
  */
 export function useCesiumInteraction(
-   viewer: Viewer | null,
-   visualizer: FlightRouteVisualizer | null
+    viewer: Viewer | null,
+    visualizer: FlightRouteVisualizer | null
 ): void {
-   const dragStateRef = useRef<{
+    const dragStateRef = useRef<{
         isDragging: boolean
         draggedWaypointId: string | null
         originalHeight: number
@@ -31,57 +31,57 @@ export function useCesiumInteraction(
     })
 
     // 订阅选点模式状态，用于改变光标样式
-   const isSelectingMode = useFlightRouteStore((s) => s.isSelectingMode)
+    const isSelectingMode = useFlightRouteStore((s) => s.isSelectingMode)
 
     // 选点模式下改变鼠标光标样式
     useEffect(() => {
         if (!viewer) return
         // 提取 canvas 元素，修改光标样式是 DOM 操作，不影响 viewer 内部状态
-       const canvasElement = viewer.canvas as HTMLCanvasElement
-       const originalCursor = canvasElement.style.cursor
-       const newCursor = isSelectingMode ? 'crosshair' : 'default'
+        const canvasElement = viewer.canvas as HTMLCanvasElement
+        const originalCursor = canvasElement.style.cursor
+        const newCursor = isSelectingMode ? 'crosshair' : 'default'
         // eslint-disable-next-line react-hooks/immutability -- DOM 操作，不影响 viewer 状态
-       canvasElement.style.cursor = newCursor
+        canvasElement.style.cursor = newCursor
         return () => {
-           canvasElement.style.cursor = originalCursor || 'default'
+            canvasElement.style.cursor = originalCursor || 'default'
         }
     }, [viewer, isSelectingMode])
 
     useEffect(() => {
-       console.log('[useCesiumInteraction] Initialized:', !!viewer, !!visualizer)
+        console.log('[useCesiumInteraction] Initialized:', !!viewer, !!visualizer)
         if (!viewer || !visualizer) return
 
-       const handler= new ScreenSpaceEventHandler(viewer.scene.canvas)
-       const store = useFlightRouteStore
+        const handler = new ScreenSpaceEventHandler(viewer.scene.canvas)
+        const store = useFlightRouteStore
 
         // LEFT_CLICK: 点击空白处添加航路点（仅选点模式），点击已有航路点选中
         handler.setInputAction((movement: { position: Cartesian2 }) => {
-           console.log('[LEFT_CLICK] Click detected, isSelectingMode:', store.getState().isSelectingMode)
+            console.log('[LEFT_CLICK] Click detected, isSelectingMode:', store.getState().isSelectingMode)
             // 如果正在拖拽，忽略点击
             if (dragStateRef.current.isDragging) return
 
-           const picked = viewer.scene.pick(movement.position)
-           const state = store.getState()
+            const picked = viewer.scene.pick(movement.position)
+            const state = store.getState()
 
             if (defined(picked) && picked.id) {
                 // 点击了已有实体 → 选中
-               const waypointId = visualizer.findWaypointIdByEntity(picked.id)
+                const waypointId = visualizer.findWaypointIdByEntity(picked.id)
                 if (waypointId) {
-                   console.log('[LEFT_CLICK] Selected waypoint:', waypointId)
+                    console.log('[LEFT_CLICK] Selected waypoint:', waypointId)
                     store.getState().selectWaypoint(waypointId)
                 }
             } else if (state.isSelectingMode) {
                 // 仅在选点模式下，点击地球空白处 → 添加航路点
-               const cartesian = viewer.camera.pickEllipsoid(
+                const cartesian = viewer.camera.pickEllipsoid(
                     movement.position,
-                   viewer.scene.globe.ellipsoid
+                    viewer.scene.globe.ellipsoid
                 )
                 if (cartesian) {
-                   const cartographic = Cartographic.fromCartesian(cartesian)
-                   const longitude = CesiumMath.toDegrees(cartographic.longitude)
-                   const latitude = CesiumMath.toDegrees(cartographic.latitude)
-                   const waypointCount = state.waypoints.length
-                   console.log('[LEFT_CLICK] Adding waypoint at:', longitude, latitude)
+                    const cartographic = Cartographic.fromCartesian(cartesian)
+                    const longitude = CesiumMath.toDegrees(cartographic.longitude)
+                    const latitude = CesiumMath.toDegrees(cartographic.latitude)
+                    const waypointCount = state.waypoints.length
+                    console.log('[LEFT_CLICK] Adding waypoint at:', longitude, latitude)
                     state.addWaypoint({
                         longitude,
                         latitude,
@@ -89,7 +89,7 @@ export function useCesiumInteraction(
                         name: `航路点${waypointCount + 1}`,
                     })
                 } else {
-                   console.warn('[LEFT_CLICK] Failed to pick ellipsoid')
+                    console.warn('[LEFT_CLICK] Failed to pick ellipsoid')
                 }
             }
         }, ScreenSpaceEventType.LEFT_CLICK)
