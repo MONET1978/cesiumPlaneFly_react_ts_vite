@@ -73,6 +73,26 @@ const WaypointPanel: React.FC<WaypointPanelProps> = ({ visualizer }) => {
         }
     }
 
+    /**
+     * 启动模拟飞行
+     * 飞行到第一个航路点
+     */
+    const handleSimulateFlight = () => {
+        if (!visualizer) {
+            console.warn('Visualizer 未初始化')
+            return
+        }
+
+        if (waypoints.length === 0) {
+            console.warn('没有可用的航路点')
+            return
+        }
+
+        const firstWaypoint = waypoints[0]
+        visualizer.flyToWaypoint(firstWaypoint, 3)
+        console.log(`开始模拟飞行，目标: ${firstWaypoint.name || '航路点1'}`)
+    }
+
     const handleDefaultHeightChange = (value: string) => {
         const num = parseFloat(value)
         if (!isNaN(num) && num >= 0) {
@@ -98,6 +118,22 @@ const WaypointPanel: React.FC<WaypointPanelProps> = ({ visualizer }) => {
                     {isSelectingMode && (
                         <div className="selecting-hint">
                             点击地图添加航路点
+                        </div>
+                    )}
+                </div>
+
+                {/* 模拟飞行按钮 */}
+                <div className="simulate-flight-section">
+                    <button
+                        className="simulate-flight-btn"
+                        onClick={handleSimulateFlight}
+                        disabled={waypoints.length === 0}
+                    >
+                        🛫 模拟飞行
+                    </button>
+                    {waypoints.length === 0 && (
+                        <div className="simulate-flight-hint">
+                            请先添加航路点
                         </div>
                     )}
                 </div>
