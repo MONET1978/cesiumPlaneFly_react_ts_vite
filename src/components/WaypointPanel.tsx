@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { useFlightRouteStore } from '../store/useFlightRouteStore'
 import { FlightRouteVisualizer } from '../utils/flightRouteVisualizer'
+import { useFlightAnimation } from '../hooks/useFlightAnimation'
 import sampleFlightRoute from '../data/sampleFlightRoute'
 import WaypointListItem from './WaypointListItem'
 import '../styles/WaypointPanel.css'
@@ -33,6 +34,9 @@ const WaypointPanel: React.FC<WaypointPanelProps> = ({ visualizer }) => {
     const exportToJSON = useFlightRouteStore((s) => s.exportToJSON)
 
     const fileInputRef = useRef<HTMLInputElement>(null)
+
+    // 使用飞行动画 Hook
+    const flightAnimation = useFlightAnimation(visualizer, waypoints)
 
     const handleExport = () => {
         const json = exportToJSON()
@@ -74,23 +78,35 @@ const WaypointPanel: React.FC<WaypointPanelProps> = ({ visualizer }) => {
     }
 
     /**
-     * 启动模拟飞行
-     * 飞行到第一个航路点
+     * 处理开始飞行按钮点击
      */
-    const handleSimulateFlight = () => {
-        if (!visualizer) {
-            console.warn('Visualizer 未初始化')
-            return
-        }
+    const handleStartFlight = async () => {
+        await flightAnimation.startFlight()
+    }
 
-        if (waypoints.length === 0) {
-            console.warn('没有可用的航路点')
-            return
+    /**
+     * 处理暂停/恢复飞行按钮点击
+     */
+    const handleTogglePause = () => {
+        if (flightAnimation.state === 'playing') {
+            flightAnimation.pauseFlight()
+        } else if (flightAnimation.state === 'paused') {
+            flightAnimation.resumeFlight()
         }
+    }
 
-        const firstWaypoint = waypoints[0]
-        visualizer.flyToWaypoint(firstWaypoint, 3)
-        console.log(`开始模拟飞行，目标: ${firstWaypoint.name || '航路点1'}`)
+    /**
+     * 处理停止飞行按钮点击
+     */
+    const handleStopFlight = () => {
+        flightAnimation.stopFlight()
+    }
+
+    /**
+     * 处理播放速度变更
+     */
+    const handleSpeedChange = (speed: number) => {
+        flightAnimation.setPlaybackSpeed(speed)
     }
 
     const handleDefaultHeightChange = (value: string) => {
@@ -124,16 +140,79 @@ const WaypointPanel: React.FC<WaypointPanelProps> = ({ visualizer }) => {
 
                 {/* 模拟飞行按钮 */}
                 <div className="simulate-flight-section">
-                    <button
-                        className="simulate-flight-btn"
-                        onClick={handleSimulateFlight}
-                        disabled={waypoints.length === 0}
-                    >
-                        🛫 模拟飞行
-                    </button>
-                    {waypoints.length === 0 && (
+                    {/* 飞行状态指示器 */}
+                    <div className="flight-status-indicator">
+                        <span className={`flight-status ${flightAnimation.state}`}>
+                            {flightAnimation.state === 'idle' && '待命'}
+                            {flightAnimation.state === 'playing' && '飞行中'}
+                            {flightAnimation.state === 'paused' && '已暂停'}
+                        </span>
+                    </div>
+
+                    {/* 飞行控制按钮 */}
+                    <div className="flight-control-buttons">
+                        {flightAnimation.state === 'idle' ? (
+                            <button
+                                className="flight-btn start"
+                                onClick={handleStartFlight}
+                                disabled={waypoints.length < 2}
+                            >
+                                🛫 开始飞行
+                            </button>
+                        ) : (
+                            <>
+                                <button
+                                    className={`flight-btn ${flightAnimation.state === 'paused' ? 'resume' : 'pause'}`}
+                                    onClick={handleTogglePause}
+                                >
+                                    {flightAnimation.state === 'paused' ? '▶️ 继续' : '⏸️ 暂停'}
+                                </button>
+                                <button
+                                    className="flight-btn stop"
+                                    onClick={handleStopFlight}
+                                >
+                                    ⏹️ 停止
+                                </button>
+                            </>
+                        )}
+                    </div>
+
+                    {/* 进度条（飞行中显示） */}
+                    {flightAnimation.isFlying && (
+                        <div className="flight-progress-display">
+                            <div className="progress-info">
+                                <span className="progress-label">飞行进度</span>
+                                <div className="progress-bar-container">
+                                    <div 
+                                        className="progress-bar" 
+                                        style={{ width: `${flightAnimation.progress * 100}%` }}
+                                    />
+                                    <span className="progress-text">
+                                        {Math.round(flightAnimation.progress * 100)}%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 速度控制 */}
+                    <div className="flight-speed-control">
+                        <label>播放速度</label>
+                        <input
+                            type="range"
+                            min="1"
+                            max="50"
+                            step="1"
+                            value={flightAnimation.playbackSpeed}
+                            onChange={(e) => handleSpeedChange(parseInt(e.target.value))}
+                        />
+                        <span>{flightAnimation.playbackSpeed}x</span>
+                    </div>
+
+                    {/* 提示信息 */}
+                    {waypoints.length < 2 && flightAnimation.state === 'idle' && (
                         <div className="simulate-flight-hint">
-                            请先添加航路点
+                            至少需要2个航路点才能飞行
                         </div>
                     )}
                 </div>

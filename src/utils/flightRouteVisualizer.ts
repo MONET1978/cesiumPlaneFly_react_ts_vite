@@ -7,6 +7,7 @@ import {
     Viewer
 } from 'cesium'
 import type { Waypoint, WaypointInput } from '../types/waypoint'
+import { FlightAnimator, type FlightAnimationConfig, type FlightAnimationState } from './flightAnimator'
 
 /**
  * 渲染模式常量
@@ -29,6 +30,7 @@ export class FlightRouteVisualizer {
     private entityMap: Map<string, Entity> = new Map()
     private polylineEntity: Entity | null = null
     private renderMode: RenderModeType = RenderMode.AUTO
+    private flightAnimator: FlightAnimator | null = null
 
     /**
      * 构造函数对Viewer对象初始化
@@ -266,6 +268,71 @@ export class FlightRouteVisualizer {
             this.entityMap.clear()
             this.polylineEntity = null
         }, 'clearAllRoutes')
+    }
+
+    /**
+     * 启动飞行动画
+     * @param waypoints - 航路点数组
+     * @param config - 动画配置（可选）
+     */
+    async startFlightAnimation(
+        waypoints: Waypoint[],
+        config?: Partial<FlightAnimationConfig>
+    ): Promise<void> {
+        if (!this.flightAnimator) {
+            this.flightAnimator = new FlightAnimator(this.viewer, config)
+        }
+        await this.flightAnimator.startFlight(waypoints)
+    }
+
+    /**
+     * 暂停飞行动画
+     */
+    pauseFlightAnimation(): void {
+        this.flightAnimator?.pause()
+    }
+
+    /**
+     * 恢复飞行动画
+     */
+    resumeFlightAnimation(): void {
+        this.flightAnimator?.resume()
+    }
+
+    /**
+     * 停止飞行动画
+     */
+    stopFlightAnimation(): void {
+        this.flightAnimator?.stopFlight()
+    }
+
+    /**
+     * 获取飞行动画状态
+     */
+    getFlightAnimationState(): FlightAnimationState {
+        return this.flightAnimator?.getState() ?? 'idle'
+    }
+
+    /**
+     * 设置飞行动画速度
+     * @param speed - 速度倍率
+     */
+    setFlightAnimationSpeed(speed: number): void {
+        this.flightAnimator?.setPlaybackSpeed(speed)
+    }
+
+    /**
+     * 获取飞行动画进度（0-1）
+     */
+    getFlightAnimationProgress(): number {
+        return this.flightAnimator?.getProgress() ?? 0
+    }
+
+    /**
+     * 检查是否正在飞行
+     */
+    isFlightAnimating(): boolean {
+        return this.flightAnimator?.isFlying() ?? false
     }
 
     /**

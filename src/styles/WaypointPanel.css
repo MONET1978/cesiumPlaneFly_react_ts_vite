@@ -338,35 +338,195 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.simulate-flight-btn {
-  width: 100%;
+/* 飞行状态指示器 */
+.flight-status-indicator {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.flight-status {
+  padding: 4px 14px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.flight-status.idle {
+  background: rgba(200, 200, 200, 0.15);
+  color: #aaa;
+  border: 1px solid rgba(200, 200, 200, 0.3);
+}
+
+.flight-status.playing {
+  background: rgba(0, 180, 255, 0.2);
+  color: #66ccff;
+  border: 1px solid rgba(0, 180, 255, 0.4);
+  animation: flight-pulse 1.5s infinite;
+}
+
+.flight-status.paused {
+  background: rgba(255, 200, 0, 0.2);
+  color: #ffcc66;
+  border: 1px solid rgba(255, 200, 0, 0.4);
+}
+
+@keyframes flight-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 180, 255, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(0, 180, 255, 0); }
+}
+
+/* 飞行控制按钮 */
+.flight-control-buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.flight-btn {
+  flex: 1;
   padding: 10px 12px;
   border-radius: 6px;
-  border: 2px solid rgba(0, 180, 255, 0.4);
-  background: rgba(0, 180, 255, 0.1);
-  color: #66ccff;
-  font-size: 14px;
+  border: 2px solid rgba(0, 200, 100, 0.4);
+  background: rgba(0, 200, 100, 0.1);
+  color: #66dd88;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.simulate-flight-btn:hover:not(:disabled) {
-  background: rgba(0, 180, 255, 0.2);
-  border-color: rgba(0, 180, 255, 0.6);
+.flight-btn:hover:not(:disabled) {
+  background: rgba(0, 200, 100, 0.2);
+  border-color: rgba(0, 200, 100, 0.6);
   transform: translateY(-1px);
 }
 
-.simulate-flight-btn:active:not(:disabled) {
+.flight-btn:active:not(:disabled) {
   transform: translateY(0);
 }
 
-.simulate-flight-btn:disabled {
+.flight-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
   border-color: rgba(200, 200, 200, 0.3);
   background: rgba(200, 200, 200, 0.1);
   color: #888;
+}
+
+.flight-btn.pause,
+.flight-btn.resume {
+  border-color: rgba(255, 200, 0, 0.4);
+  background: rgba(255, 200, 0, 0.1);
+  color: #ffcc66;
+}
+
+.flight-btn.pause:hover:not(:disabled),
+.flight-btn.resume:hover:not(:disabled) {
+  background: rgba(255, 200, 0, 0.2);
+  border-color: rgba(255, 200, 0, 0.6);
+}
+
+.flight-btn.stop {
+  border-color: rgba(255, 100, 100, 0.4);
+  background: rgba(255, 100, 100, 0.1);
+  color: #ff8888;
+}
+
+.flight-btn.stop:hover:not(:disabled) {
+  background: rgba(255, 100, 100, 0.2);
+  border-color: rgba(255, 100, 100, 0.6);
+}
+
+/* 飞行进度显示 */
+.flight-progress-display {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 12px;
+}
+
+.progress-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.progress-label {
+  color: #999;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.progress-bar-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 12px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(0, 180, 255, 0.3);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  min-width: 0;
+}
+
+.progress-text {
+  color: #66ccff;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 36px;
+  text-align: right;
+}
+
+/* 飞行速度控制 */
+.flight-speed-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.flight-speed-control label {
+  color: #999;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.flight-speed-control input[type="range"] {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.flight-speed-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #66ccff;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.flight-speed-control input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.flight-speed-control span {
+  color: #66ccff;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 40px;
+  text-align: right;
 }
 
 .simulate-flight-hint {
