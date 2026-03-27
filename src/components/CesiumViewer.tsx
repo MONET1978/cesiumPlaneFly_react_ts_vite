@@ -74,8 +74,10 @@ const CesiumViewer: React.FC<CesiumViewerProps> = ({
             setVisualizer(vis)
             handleVisualizerReady.current(vis)
 
-            // 飞行到第一个航路点（如果有的话）
-            const waypoints = useFlightRouteStore.getState().waypoints
+            const state = useFlightRouteStore.getState()
+            const currentRoute = state.routes.find(r => r.id === state.currentRouteId)
+            const waypoints = currentRoute?.waypoints ?? []
+            
             if (waypoints.length > 0) {
                 const first = waypoints[0]
                 v.camera.flyTo({

@@ -16,13 +16,17 @@ interface WaypointPanelProps {
 const WaypointPanel: React.FC<WaypointPanelProps> = ({ visualizer }) => {
     const [collapsed, setCollapsed] = useState(false)
 
-    const waypoints = useFlightRouteStore((s) => s.waypoints)
-    const routeName = useFlightRouteStore((s) => s.routeName)
-    const routeColor = useFlightRouteStore((s) => s.routeColor)
-    const routeLineWidth = useFlightRouteStore((s) => s.routeLineWidth)
+    const routes = useFlightRouteStore((s) => s.routes)
+    const currentRouteId = useFlightRouteStore((s) => s.currentRouteId)
     const selectedWaypointId = useFlightRouteStore((s) => s.selectedWaypointId)
     const defaultHeight = useFlightRouteStore((s) => s.defaultHeight)
     const isSelectingMode = useFlightRouteStore((s) => s.isSelectingMode)
+    
+    const currentRoute = routes.find(r => r.id === currentRouteId)
+    const waypoints = currentRoute?.waypoints ?? []
+    const routeName = currentRoute?.name ?? ''
+    const routeColor = currentRoute?.color ?? '#FFD700'
+    const routeLineWidth = currentRoute?.lineWidth ?? 3
 
     const selectWaypoint = useFlightRouteStore((s) => s.selectWaypoint)
     const deleteWaypoint = useFlightRouteStore((s) => s.deleteWaypoint)

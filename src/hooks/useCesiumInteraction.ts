@@ -30,17 +30,13 @@ export function useCesiumInteraction(
         originalHeight: 0
     })
 
-    // 订阅选点模式状态，用于改变光标样式
     const isSelectingMode = useFlightRouteStore((s) => s.isSelectingMode)
 
-    // 选点模式下改变鼠标光标样式
     useEffect(() => {
         if (!viewer) return
-        // 提取 canvas 元素，修改光标样式是 DOM 操作，不影响 viewer 内部状态
         const canvasElement = viewer.canvas as HTMLCanvasElement
         const originalCursor = canvasElement.style.cursor
         const newCursor = isSelectingMode ? 'crosshair' : 'default'
-        // eslint-disable-next-line react-hooks/immutability -- DOM 操作，不影响 viewer 状态
         canvasElement.style.cursor = newCursor
         return () => {
             canvasElement.style.cursor = originalCursor || 'default'
@@ -54,24 +50,20 @@ export function useCesiumInteraction(
         const handler = new ScreenSpaceEventHandler(viewer.scene.canvas)
         const store = useFlightRouteStore
 
-        // LEFT_CLICK: 点击空白处添加航路点（仅选点模式），点击已有航路点选中
         handler.setInputAction((movement: { position: Cartesian2 }) => {
             console.log('[LEFT_CLICK] Click detected, isSelectingMode:', store.getState().isSelectingMode)
-            // 如果正在拖拽，忽略点击
             if (dragStateRef.current.isDragging) return
 
             const picked = viewer.scene.pick(movement.position)
             const state = store.getState()
 
             if (defined(picked) && picked.id) {
-                // 点击了已有实体 → 选中
                 const waypointId = visualizer.findWaypointIdByEntity(picked.id)
                 if (waypointId) {
                     console.log('[LEFT_CLICK] Selected waypoint:', waypointId)
                     store.getState().selectWaypoint(waypointId)
                 }
             } else if (state.isSelectingMode) {
-                // 仅在选点模式下，点击地球空白处 → 添加航路点
                 const cartesian = viewer.camera.pickEllipsoid(
                     movement.position,
                     viewer.scene.globe.ellipsoid
@@ -80,7 +72,8 @@ export function useCesiumInteraction(
                     const cartographic = Cartographic.fromCartesian(cartesian)
                     const longitude = CesiumMath.toDegrees(cartographic.longitude)
                     const latitude = CesiumMath.toDegrees(cartographic.latitude)
-                    const waypointCount = state.waypoints.length
+                    const currentRoute = state.routes.find(r => r.id === state.currentRouteId)
+                    const waypointCount = currentRoute?.waypoints.length ?? 0
                     console.log('[LEFT_CLICK] Adding waypoint at:', longitude, latitude)
                     state.addWaypoint({
                         longitude,
@@ -94,7 +87,6 @@ export function useCesiumInteraction(
             }
         }, ScreenSpaceEventType.LEFT_CLICK)
 
-        // RIGHT_CLICK: 右键删除航路点
         handler.setInputAction((movement: { position: Cartesian2 }) => {
             const picked = viewer.scene.pick(movement.position)
             if (defined(picked) && picked.id) {
@@ -105,14 +97,14 @@ export function useCesiumInteraction(
             }
         }, ScreenSpaceEventType.RIGHT_CLICK)
 
-        // LEFT_DOWN: 开始拖拽
         handler.setInputAction((movement: { position: Cartesian2 }) => {
             const picked = viewer.scene.pick(movement.position)
             if (defined(picked) && picked.id) {
                 const waypointId = visualizer.findWaypointIdByEntity(picked.id)
                 if (waypointId) {
                     const state = store.getState()
-                    const waypoint = state.waypoints.find((wp) => wp.id === waypointId)
+                    const currentRoute = state.routes.find(r => r.id === state.currentRouteId)
+                    const waypoint = currentRoute?.waypoints.find((wp) => wp.id === waypointId)
                     if (!waypoint) return
 
                     dragStateRef.current = {
@@ -123,7 +115,6 @@ export function useCesiumInteraction(
 
                     store.getState().setDragging(true)
 
-                    // 禁用相机控制
                     viewer.scene.screenSpaceCameraController.enableRotate = false
                     viewer.scene.screenSpaceCameraController.enableTranslate = false
                     viewer.scene.screenSpaceCameraController.enableZoom = false
@@ -133,7 +124,6 @@ export function useCesiumInteraction(
             }
         }, ScreenSpaceEventType.LEFT_DOWN)
 
-        // MOUSE_MOVE: 拖拽中移动航路点
         handler.setInputAction((movement: { endPosition: Cartesian2 }) => {
             const drag = dragStateRef.current
             if (!drag.isDragging || !drag.draggedWaypointId) return
@@ -148,32 +138,31 @@ export function useCesiumInteraction(
             const longitude = CesiumMath.toDegrees(cartographic.longitude)
             const latitude = CesiumMath.toDegrees(cartographic.latitude)
 
-            // 拖拽期间直接操作 Entity（绕过 store，确保流畅性）
             visualizer.updateWaypointPosition(drag.draggedWaypointId, {
                 longitude,
                 latitude,
                 height: drag.originalHeight,
             })
 
-            // 同时更新 polyline
             const state = store.getState()
-            const updatedWaypoints = state.waypoints.map((wp) =>
-                wp.id === drag.draggedWaypointId
-                    ? { ...wp, longitude, latitude }
-                    : wp
-            )
-            const routeColor = state.routeColor
-                ? Color.fromCssColorString(state.routeColor)
-                : Color.YELLOW
-            visualizer.updatePolyline(updatedWaypoints, routeColor, state.routeLineWidth)
+            const currentRoute = state.routes.find(r => r.id === state.currentRouteId)
+            if (currentRoute) {
+                const updatedWaypoints = currentRoute.waypoints.map((wp) =>
+                    wp.id === drag.draggedWaypointId
+                        ? { ...wp, longitude, latitude }
+                        : wp
+                )
+                const routeColor = currentRoute.color
+                    ? Color.fromCssColorString(currentRoute.color)
+                    : Color.YELLOW
+                visualizer.updatePolyline(updatedWaypoints, routeColor, currentRoute.lineWidth)
+            }
         }, ScreenSpaceEventType.MOUSE_MOVE)
 
-        // LEFT_UP: 结束拖拽
         handler.setInputAction(() => {
             const drag = dragStateRef.current
             if (!drag.isDragging || !drag.draggedWaypointId) return
 
-            // 获取被拖拽 entity 的最终位置
             const entity = visualizer.getEntityById(drag.draggedWaypointId)
             if (entity?.position) {
                 const cartesian = entity.position.getValue(viewer.clock.currentTime)
@@ -182,7 +171,6 @@ export function useCesiumInteraction(
                     const longitude = CesiumMath.toDegrees(cartographic.longitude)
                     const latitude = CesiumMath.toDegrees(cartographic.latitude)
 
-                    // 最终位置写入 store
                     store.getState().updateWaypoint(drag.draggedWaypointId, {
                         longitude,
                         latitude,
@@ -190,7 +178,6 @@ export function useCesiumInteraction(
                 }
             }
 
-            // 重置拖拽状态
             dragStateRef.current = {
                 isDragging: false,
                 draggedWaypointId: null,
@@ -198,7 +185,6 @@ export function useCesiumInteraction(
             }
             store.getState().setDragging(false)
 
-            // 恢复相机控制
             viewer.scene.screenSpaceCameraController.enableRotate = true
             viewer.scene.screenSpaceCameraController.enableTranslate = true
             viewer.scene.screenSpaceCameraController.enableZoom = true
@@ -209,7 +195,6 @@ export function useCesiumInteraction(
         return () => {
             handler.destroy()
 
-            // 确保相机控制恢复
             if (!viewer.isDestroyed()) {
                 viewer.scene.screenSpaceCameraController.enableRotate = true
                 viewer.scene.screenSpaceCameraController.enableTranslate = true

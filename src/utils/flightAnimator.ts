@@ -104,10 +104,10 @@ export class FlightAnimator {
         // 创建飞机实体
         await this.createAirplaneEntity()
 
-        // 设置相机跟踪
-        this.viewer.trackedEntity = this.airplaneEntity
+        if (this.airplaneEntity) {
+            this.viewer.trackedEntity = this.airplaneEntity
+        }
 
-        // 开始播放动画
         this.play()
 
         this.state = 'playing'
@@ -206,8 +206,8 @@ export class FlightAnimator {
                         stop: this.stopTime!
                     })
                 ]),
-                position: this.positionProperty,
-                orientation: new VelocityOrientationProperty(this.positionProperty),
+                position: this.positionProperty!,
+                orientation: new VelocityOrientationProperty(this.positionProperty!),
                 model: {
                     uri: airplaneUri,
                     minimumPixelSize: 64,

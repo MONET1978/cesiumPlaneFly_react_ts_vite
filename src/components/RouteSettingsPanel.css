@@ -1,0 +1,290 @@
+.route-settings-panel {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 10vh;
+    width: 320px;
+    max-width: 30vw;
+    background: rgba(15, 15, 15, 0.96);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 200;
+    display: flex;
+    backdrop-filter: blur(12px);
+    transition: width 0.3s ease;
+    box-shadow: 2px 0 20px rgba(0, 0, 0, 0.4);
+}
+
+.route-settings-panel.collapsed {
+    width: 40px;
+}
+
+.panel-toggle-btn {
+    position: absolute;
+    right: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 80px;
+    background: rgba(15, 15, 15, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    color: #999;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.panel-toggle-btn:hover {
+    background: rgba(30, 30, 30, 0.98);
+    color: #e0e0e0;
+}
+
+.settings-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.settings-header h3 {
+    margin: 0;
+    color: #e0e0e0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.close-settings-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.05);
+    color: #999;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.close-settings-btn:hover {
+    background: rgba(255, 100, 100, 0.2);
+    color: #ff8888;
+    border-color: rgba(255, 100, 100, 0.3);
+}
+
+.settings-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.selecting-mode-section {
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.selecting-mode-btn {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 2px solid rgba(0, 200, 100, 0.4);
+    background: rgba(0, 200, 100, 0.1);
+    color: #66dd88;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.selecting-mode-btn:hover {
+    background: rgba(0, 200, 100, 0.2);
+    border-color: rgba(0, 200, 100, 0.6);
+}
+
+.selecting-mode-btn.active {
+    border-color: rgba(255, 100, 100, 0.5);
+    background: rgba(255, 100, 100, 0.15);
+    color: #ff8888;
+}
+
+.selecting-hint {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: rgba(0, 200, 100, 0.1);
+    border-radius: 6px;
+    color: #88cc99;
+    font-size: 12px;
+    text-align: center;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.route-config {
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.config-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.config-row:last-child {
+    margin-bottom: 0;
+}
+
+.config-row label {
+    min-width: 70px;
+    color: #999;
+    font-size: 13px;
+}
+
+.config-row input[type="text"],
+.config-row input[type="number"] {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    color: #e0e0e0;
+    padding: 8px 12px;
+    font-size: 13px;
+    outline: none;
+}
+
+.config-row input:focus {
+    border-color: rgba(0, 180, 255, 0.5);
+}
+
+.config-row input[type="color"] {
+    width: 50px;
+    height: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    background: none;
+    cursor: pointer;
+    padding: 2px;
+}
+
+.waypoint-list-header {
+    padding: 12px 18px;
+    color: #999;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.waypoint-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.empty-list {
+    padding: 24px 18px;
+    text-align: center;
+    color: #666;
+    font-size: 13px;
+}
+
+.panel-footer {
+    padding: 14px 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.default-height-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.default-height-row label {
+    color: #999;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.default-height-row input {
+    width: 80px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    color: #e0e0e0;
+    padding: 6px 10px;
+    font-size: 13px;
+    outline: none;
+}
+
+.default-height-row span {
+    color: #777;
+    font-size: 13px;
+}
+
+.footer-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.footer-row:last-child {
+    margin-bottom: 0;
+}
+
+.footer-row button {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.06);
+    color: #ccc;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.footer-row button:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.footer-row button.danger {
+    border-color: rgba(255, 60, 60, 0.3);
+    color: #ff8888;
+}
+
+.footer-row button.danger:hover {
+    background: rgba(255, 60, 60, 0.15);
+}
+
+.footer-row button.primary {
+    border-color: rgba(0, 150, 255, 0.3);
+    color: #66bbff;
+}
+
+.footer-row button.primary:hover {
+    background: rgba(0, 150, 255, 0.15);
+}
+
+.footer-row button.success {
+    border-color: rgba(0, 200, 100, 0.3);
+    background: rgba(0, 200, 100, 0.15);
+    color: #66dd88;
+}
+
+.footer-row button.success:hover {
+    background: rgba(0, 200, 100, 0.25);
+}

@@ -16,29 +16,32 @@ export function useCesiumSync(
     useEffect(() => {
         if (!viewer || !visualizer) return
 
-        // 首次同步：渲染 store 中的当前数据
         const state = useFlightRouteStore.getState()
-        visualizer.syncAll(state.waypoints, state.routeColor, state.routeLineWidth)
+        const currentRoute = state.routes.find(r => r.id === state.currentRouteId)
+        
+        if (currentRoute) {
+            visualizer.syncAll(currentRoute.waypoints, currentRoute.color, currentRoute.lineWidth)
+        }
 
-        // 订阅后续变化
         const unsubscribe = useFlightRouteStore.subscribe((state, prevState) => {
-            // 航路点、颜色或线宽变化 → 全量同步
+            const currentRoute = state.routes.find(r => r.id === state.currentRouteId)
+            const prevRoute = prevState.routes.find(r => r.id === prevState.currentRouteId)
+
             if (
-                state.waypoints !== prevState.waypoints ||
-                state.routeColor !== prevState.routeColor ||
-                state.routeLineWidth !== prevState.routeLineWidth
+                currentRoute &&
+                (currentRoute.waypoints !== prevRoute?.waypoints ||
+                currentRoute.color !== prevRoute?.color ||
+                currentRoute.lineWidth !== prevRoute?.lineWidth)
             ) {
-                // 拖拽期间由交互层直接操作 Entity，跳过 sync
                 if (!state.isDragging) {
                     visualizer.syncAll(
-                        state.waypoints,
-                        state.routeColor,
-                        state.routeLineWidth
+                        currentRoute.waypoints,
+                        currentRoute.color,
+                        currentRoute.lineWidth
                     )
                 }
             }
 
-            // 选中状态变化 → 高亮/取消高亮
             if (state.selectedWaypointId !== prevState.selectedWaypointId) {
                 if (prevSelectedRef.current) {
                     visualizer.unhighlightWaypoint(prevSelectedRef.current)
