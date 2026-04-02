@@ -231,7 +231,7 @@ export const useFlightRouteStore = create<FlightRouteStore>((set, get) => ({
         const route: FlightRoute = {
             name: currentRoute.name,
             waypoints: currentRoute.waypoints.map((w) => {
-                const { id: _id, ...rest } = w
+                const {  ...rest } = w
                 return rest
             }),
             color: currentRoute.color,

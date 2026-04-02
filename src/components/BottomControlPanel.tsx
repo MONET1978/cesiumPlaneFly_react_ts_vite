@@ -24,9 +24,11 @@ const BottomControlPanel: React.FC<BottomControlPanelProps> = ({
     const routes = useFlightRouteStore((s) => s.routes)
     const currentRouteId = useFlightRouteStore((s) => s.currentRouteId)
     const selectRoute = useFlightRouteStore((s) => s.selectRoute)
+    const deleteRoute = useFlightRouteStore((s) => s.deleteRoute)
     
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
     const [isFlying, setIsFlying] = useState(false)
+    const [deleteConfirmRouteId, setDeleteConfirmRouteId] = useState<string | null>(null)
     
     const currentRoute = routes.find(r => r.id === currentRouteId)
     const waypoints = currentRoute?.waypoints ?? []
@@ -62,6 +64,22 @@ const BottomControlPanel: React.FC<BottomControlPanelProps> = ({
         onOpenRouteSettings(routeId)
     }
 
+    const handleDeleteClick = (routeId: string, e: React.MouseEvent) => {
+        e.stopPropagation()
+        setDeleteConfirmRouteId(routeId)
+    }
+
+    const handleConfirmDelete = () => {
+        if (deleteConfirmRouteId) {
+            deleteRoute(deleteConfirmRouteId)
+            setDeleteConfirmRouteId(null)
+        }
+    }
+
+    const handleCancelDelete = () => {
+        setDeleteConfirmRouteId(null)
+    }
+
     return (
         <div className="bottom-control-panel">
             <div className="panel-left">
@@ -95,13 +113,22 @@ const BottomControlPanel: React.FC<BottomControlPanelProps> = ({
                                 >
                                     <span className="route-index">{index + 1}.</span>
                                     <span className="route-item-name">{route.name}</span>
-                                    <button 
-                                        className="settings-btn"
-                                        onClick={(e) => handleSettingsClick(route.id, e)}
-                                        title="航线设置"
-                                    >
-                                        ⚙
-                                    </button>
+                                    <div className="route-item-actions">
+                                        <button 
+                                            className="settings-btn"
+                                            onClick={(e) => handleSettingsClick(route.id, e)}
+                                            title="航线设置"
+                                        >
+                                            ⚙
+                                        </button>
+                                        <button 
+                                            className="delete-btn"
+                                            onClick={(e) => handleDeleteClick(route.id, e)}
+                                            title="删除航线"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                             <div 
@@ -113,6 +140,25 @@ const BottomControlPanel: React.FC<BottomControlPanelProps> = ({
                             >
                                 <span className="route-index">+</span>
                                 <span className="route-item-name">添加航线</span>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {deleteConfirmRouteId && (
+                        <div className="delete-confirm-overlay" onClick={handleCancelDelete}>
+                            <div className="delete-confirm-dialog" onClick={(e) => e.stopPropagation()}>
+                                <div className="delete-confirm-title">确认删除</div>
+                                <div className="delete-confirm-message">
+                                    确定要删除这条航线吗？此操作无法撤销。
+                                </div>
+                                <div className="delete-confirm-buttons">
+                                    <button className="cancel-btn" onClick={handleCancelDelete}>
+                                        取消
+                                    </button>
+                                    <button className="confirm-btn" onClick={handleConfirmDelete}>
+                                        删除
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )}

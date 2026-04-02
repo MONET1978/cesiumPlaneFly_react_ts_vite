@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { FlightRouteVisualizer } from '../utils/flightRouteVisualizer'
 import type { FlightAnimationState } from '../utils/flightAnimator'
 import type { Waypoint } from '../types/waypoint'
@@ -9,8 +9,6 @@ import type { Waypoint } from '../types/waypoint'
 interface FlightAnimationControl {
     /** 当前动画状态 */
     state: FlightAnimationState
-    /** 飞行进度（0-1） */
-    progress: number
     /** 播放速度倍率 */
     playbackSpeed: number
     /** 启动飞行 */
@@ -39,38 +37,7 @@ export function useFlightAnimation(
     waypoints: Waypoint[]
 ): FlightAnimationControl {
     const [state, setState] = useState<FlightAnimationState>('idle')
-    const [progress, setProgress] = useState(0)
     const [playbackSpeed, setPlaybackSpeed] = useState(5)
-    const progressIntervalRef = useRef<number | null>(null)
-
-    /**
-     * 清除进度更新定时器
-     */
-    const clearProgressInterval = useCallback(() => {
-        if (progressIntervalRef.current !== null) {
-            clearInterval(progressIntervalRef.current)
-            progressIntervalRef.current = null
-        }
-    }, [])
-
-    /**
-     * 启动进度更新定时器
-     */
-    const startProgressInterval = useCallback(() => {
-        clearProgressInterval()
-        progressIntervalRef.current = window.setInterval(() => {
-            if (visualizer) {
-                const currentProgress = visualizer.getFlightAnimationProgress()
-                setProgress(currentProgress)
-
-                // 检查是否完成
-                if (currentProgress >= 1) {
-                    setState('idle')
-                    clearProgressInterval()
-                }
-            }
-        }, 100)
-    }, [visualizer, clearProgressInterval])
 
     /**
      * 启动飞行
@@ -89,13 +56,11 @@ export function useFlightAnimation(
         try {
             await visualizer.startFlightAnimation(waypoints, { playbackSpeed })
             setState('playing')
-            setProgress(0)
-            startProgressInterval()
             console.log('飞行动画已启动')
         } catch (error) {
             console.error('启动飞行动画失败:', error)
         }
-    }, [visualizer, waypoints, playbackSpeed, startProgressInterval])
+    }, [visualizer, waypoints, playbackSpeed])
 
     /**
      * 暂停飞行
@@ -124,10 +89,8 @@ export function useFlightAnimation(
         if (!visualizer) return
         visualizer.stopFlightAnimation()
         setState('idle')
-        setProgress(0)
-        clearProgressInterval()
         console.log('飞行动画已停止')
-    }, [visualizer, clearProgressInterval])
+    }, [visualizer])
 
     /**
      * 设置播放速度
@@ -140,15 +103,6 @@ export function useFlightAnimation(
             }
         }
     }, [visualizer, state])
-
-    /**
-     * 组件卸载时清理
-     */
-    useEffect(() => {
-        return () => {
-            clearProgressInterval()
-        }
-    }, [clearProgressInterval])
 
     /**
      * 同步状态
@@ -170,7 +124,6 @@ export function useFlightAnimation(
 
     return {
         state,
-        progress,
         playbackSpeed,
         startFlight,
         pauseFlight,

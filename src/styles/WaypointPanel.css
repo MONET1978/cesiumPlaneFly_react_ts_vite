@@ -439,51 +439,6 @@
   border-color: rgba(255, 100, 100, 0.6);
 }
 
-/* 飞行进度显示 */
-.flight-progress-display {
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 6px;
-  padding: 10px;
-  margin-bottom: 12px;
-}
-
-.progress-info {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.progress-label {
-  color: #999;
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.progress-bar-container {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: 12px;
-}
-
-.progress-bar {
-  flex: 1;
-  height: 6px;
-  background: rgba(0, 180, 255, 0.3);
-  border-radius: 3px;
-  transition: width 0.3s ease;
-  min-width: 0;
-}
-
-.progress-text {
-  color: #66ccff;
-  font-size: 11px;
-  font-weight: 600;
-  min-width: 36px;
-  text-align: right;
-}
-
 /* 飞行速度控制 */
 .flight-speed-control {
   display: flex;
@@ -637,59 +592,6 @@
 .flight-btn:nth-child(2):hover:not(.disabled) {
   background: rgba(255, 100, 100, 0.2);
   border-color: rgba(255, 100, 100, 0.6);
-}
-
-.flight-progress-display {
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 6px;
-  padding: 10px;
-  margin-bottom: 10px;
-}
-
-.progress-info {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 6px;
-}
-
-.progress-info:last-child {
-  margin-bottom: 0;
-}
-
-.progress-label {
-  color: #999;
-  font-size: 12px;
-}
-
-.progress-value {
-  color: #e0e0e0;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.progress-bar-container {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: 12px;
-}
-
-.progress-bar {
-  height: 6px;
-  background: rgba(0, 180, 255, 0.3);
-  border-radius: 3px;
-  transition: width 0.3s ease;
-  min-width: 0;
-}
-
-.progress-text {
-  color: #66ccff;
-  font-size: 11px;
-  font-weight: 600;
-  min-width: 32px;
-  text-align: right;
 }
 
 .next-waypoint-info {

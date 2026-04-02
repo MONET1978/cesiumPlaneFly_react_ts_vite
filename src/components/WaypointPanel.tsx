@@ -181,24 +181,6 @@ const WaypointPanel: React.FC<WaypointPanelProps> = ({ visualizer }) => {
                         )}
                     </div>
 
-                    {/* 进度条（飞行中显示） */}
-                    {flightAnimation.isFlying && (
-                        <div className="flight-progress-display">
-                            <div className="progress-info">
-                                <span className="progress-label">飞行进度</span>
-                                <div className="progress-bar-container">
-                                    <div 
-                                        className="progress-bar" 
-                                        style={{ width: `${flightAnimation.progress * 100}%` }}
-                                    />
-                                    <span className="progress-text">
-                                        {Math.round(flightAnimation.progress * 100)}%
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
                     {/* 速度控制 */}
                     <div className="flight-speed-control">
                         <label>播放速度</label>

@@ -22,16 +22,31 @@ const FlightStatusPanel: React.FC<FlightStatusPanelProps> = ({
     const routes = useFlightRouteStore((s) => s.routes)
     const currentRouteId = useFlightRouteStore((s) => s.currentRouteId)
     const selectRoute = useFlightRouteStore((s) => s.selectRoute)
-    
+
     const [position, setPosition] = useState({ x: 100, y: 50 })
     const [isDragging, setIsDragging] = useState(false)
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
     const panelRef = useRef<HTMLDivElement>(null)
-    
+
     const currentRoute = routes.find(r => r.id === currentRouteId)
     const waypoints = currentRoute?.waypoints ?? []
-    
+
     const flightAnimation = useFlightAnimation(visualizer, waypoints)
+    const [flightProgress, setFlightProgress] = useState(0)
+
+    // Sync progress from visualizer
+    useEffect(() => {
+        if (!visualizer) return
+
+        const updateProgress = () => {
+            const progress = visualizer.getFlightAnimationProgress()
+            setFlightProgress(progress)
+        }
+
+        updateProgress()
+        const interval = setInterval(updateProgress, 100)
+        return () => clearInterval(interval)
+    }, [visualizer, flightAnimation.state])
 
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
         if ((e.target as HTMLElement).closest('.panel-controls')) return
@@ -85,7 +100,7 @@ const FlightStatusPanel: React.FC<FlightStatusPanelProps> = ({
     if (!isVisible) return null
 
     return (
-        <div 
+        <div
             ref={panelRef}
             className={`flight-status-panel ${isDragging ? 'dragging' : ''}`}
             style={{
@@ -102,7 +117,7 @@ const FlightStatusPanel: React.FC<FlightStatusPanelProps> = ({
             <div className="panel-content">
                 <div className="route-select-section">
                     <label>当前航线</label>
-                    <select 
+                    <select
                         value={currentRouteId || ''}
                         onChange={(e) => selectRoute(e.target.value)}
                     >
@@ -116,7 +131,7 @@ const FlightStatusPanel: React.FC<FlightStatusPanelProps> = ({
 
                 <div className="flight-controls">
                     {flightAnimation.state === 'idle' ? (
-                        <button 
+                        <button
                             className="control-btn start"
                             onClick={handleStartFlight}
                             disabled={waypoints.length < 2}
@@ -125,13 +140,13 @@ const FlightStatusPanel: React.FC<FlightStatusPanelProps> = ({
                         </button>
                     ) : (
                         <>
-                            <button 
+                            <button
                                 className={`control-btn ${flightAnimation.state === 'paused' ? 'resume' : 'pause'}`}
                                 onClick={handleTogglePause}
                             >
                                 {flightAnimation.state === 'paused' ? '▶️ 继续' : '⏸️ 暂停'}
                             </button>
-                            <button 
+                            <button
                                 className="control-btn stop"
                                 onClick={handleStopFlight}
                             >
@@ -140,23 +155,6 @@ const FlightStatusPanel: React.FC<FlightStatusPanelProps> = ({
                         </>
                     )}
                 </div>
-
-                {flightAnimation.isFlying && (
-                    <div className="progress-section">
-                        <div className="progress-header">
-                            <span>飞行进度</span>
-                            <span className="progress-value">
-                                {Math.round(flightAnimation.progress * 100)}%
-                            </span>
-                        </div>
-                        <div className="progress-bar-container">
-                            <div 
-                                className="progress-bar"
-                                style={{ width: `${flightAnimation.progress * 100}%` }}
-                            />
-                        </div>
-                    </div>
-                )}
 
                 <div className="speed-section">
                     <div className="speed-header">
@@ -173,9 +171,24 @@ const FlightStatusPanel: React.FC<FlightStatusPanelProps> = ({
                     />
                 </div>
 
+                {flightAnimation.state !== 'idle' && (
+                    <div className="progress-section">
+                        <div className="progress-header">
+                            <span>飞行进度</span>
+                            <span className="progress-value">{Math.round(flightProgress * 100)}%</span>
+                        </div>
+                        <div className="progress-bar">
+                            <div 
+                                className="progress-fill" 
+                                style={{ width: `${flightProgress * 100}%` }}
+                            />
+                        </div>
+                    </div>
+                )}
+
                 {waypoints.length < 2 && flightAnimation.state === 'idle' && (
                     <div className="hint-message">
-                        至少需要2个航路点才能飞行
+                        至少需要 2 个航路点才能飞行
                     </div>
                 )}
             </div>
